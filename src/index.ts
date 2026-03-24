@@ -100,28 +100,28 @@ app.post("/webhook", async (c) => {
     const args: string = envelope.event?.data?.text ?? "";
 
     switch (cmd) {
-      case "/join":
+      case "join":
         reply = await handleJoin(c.env.DB, instCtx, sender, args);
         break;
-      case "/leave":
+      case "leave":
         reply = await handleLeave(c.env.DB, instCtx, sender);
         break;
-      case "/who":
+      case "who":
         reply = await handleWho(c.env.DB, instCtx, sender);
         break;
-      case "/rooms":
+      case "rooms":
         reply = await handleRooms(c.env.DB, instCtx);
         break;
-      case "/nick":
+      case "nick":
         reply = await handleNick(c.env.DB, instCtx, sender, args);
         break;
-      case "/topic":
+      case "topic":
         reply = await handleTopic(c.env.DB, instCtx, sender, args);
         break;
       default:
         reply = "未知命令。可用：/join /leave /who /rooms /nick /topic";
     }
-  } else if (envelope.type === "event_callback" && envelope.event?.type === "message.text") {
+  } else if (envelope.type === "event" && envelope.event?.type === "message.text") {
     const text: string = envelope.event?.data?.content?.text ?? envelope.event?.data?.content ?? "";
     reply = await handleMessage(c.env.DB, instCtx, sender, text);
   }

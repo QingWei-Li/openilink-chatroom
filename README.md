@@ -65,15 +65,15 @@ npx wrangler deploy
 - Name: `微信聊天室`
 - Slug: `wechat-chatroom`
 
-**Commands**
+**Tools**
 ```json
 [
-  {"name": "/join",  "description": "加入或创建房间", "usage": "/join <房间名>"},
-  {"name": "/leave", "description": "离开当前房间"},
-  {"name": "/who",   "description": "查看房间成员"},
-  {"name": "/rooms", "description": "查看所有房间"},
-  {"name": "/nick",  "description": "设置昵称", "usage": "/nick <昵称>"},
-  {"name": "/topic", "description": "设置房间话题", "usage": "/topic <内容>"}
+  {"name": "join",  "description": "加入或创建聊天室房间", "command": "join"},
+  {"name": "leave", "description": "离开当前房间", "command": "leave"},
+  {"name": "who",   "description": "查看当前房间成员", "command": "who"},
+  {"name": "rooms", "description": "查看所有房间列表", "command": "rooms"},
+  {"name": "nick",  "description": "设置昵称", "command": "nick"},
+  {"name": "topic", "description": "设置房间话题", "command": "topic"}
 ]
 ```
 
