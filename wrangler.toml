@@ -9,4 +9,4 @@ database_name = "openilink-chatroom"
 database_id = "5981ca14-273e-4b7e-8071-b5ca72bb3168"
 
 [vars]
-WORKER_URL = "https://openilink-chatroom.cinwell.workers.dev"
+WORKER_URL = "https://chatroom.clawgame.win"
