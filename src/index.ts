@@ -36,20 +36,18 @@ app.post("/install", async (c) => {
   const hubUrl = c.req.query("hub");
   if (!hubUrl) return c.json({ error: "missing hub query param" }, 400);
 
-  const body = await c.req.json<{
-    installation_id: string;
-    app_token: string;
-    signing_secret: string;
-    bot_id: string;
-  }>();
+  const body = await c.req.json<Record<string, string>>();
+  const { installation_id, app_token, signing_secret, bot_id } = body;
+
+  if (!installation_id || !app_token || !signing_secret || !bot_id) {
+    return c.json({ error: "missing required fields", received: Object.keys(body) }, 400);
+  }
 
   await c.env.DB.prepare(
-    `
-    INSERT OR REPLACE INTO installations (installation_id, app_token, signing_secret, bot_id, hub_url)
-    VALUES (?, ?, ?, ?, ?)
-  `,
+    `INSERT OR REPLACE INTO installations (installation_id, app_token, signing_secret, bot_id, hub_url)
+     VALUES (?, ?, ?, ?, ?)`,
   )
-    .bind(body.installation_id, body.app_token, body.signing_secret, body.bot_id, hubUrl)
+    .bind(installation_id, app_token, signing_secret, bot_id, hubUrl)
     .run();
 
   return c.json({ request_url: `${c.env.WORKER_URL}/webhook` });
