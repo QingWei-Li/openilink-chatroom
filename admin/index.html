@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chatroom Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body { font-family: monospace; background: #0d0d0d; color: #c8c8c8; padding: 24px }
+  h1 { color: #e0e0e0; font-size: 1.1rem; margin-bottom: 20px; letter-spacing: 2px }
+  .cards { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap }
+  .card { background: #1a1a1a; border: 1px solid #333; padding: 16px 24px; min-width: 140px }
+  .card-val { font-size: 2rem; color: #7ec8e3 }
+  .card-label { font-size: 0.75rem; color: #666; margin-top: 4px }
+  table { width: 100%; border-collapse: collapse }
+  th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; color: #666; font-size: 0.75rem; text-transform: uppercase }
+  td { padding: 8px 12px; border-bottom: 1px solid #1e1e1e; font-size: 0.85rem }
+  tr:hover td { background: #161616 }
+  .badge { background: #1e3a2f; color: #4caf7d; padding: 2px 8px; font-size: 0.75rem }
+  #login { max-width: 320px; margin: 80px auto }
+  #login input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #c8c8c8; font-family: monospace; margin-bottom: 10px }
+  #login button { width: 100%; padding: 10px; background: #7ec8e3; color: #000; border: none; cursor: pointer; font-family: monospace }
+  #err { color: #e07070; margin-top: 8px; font-size: 0.85rem }
+  .hidden { display: none }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>══ CHATROOM ADMIN ══</h1>
+  <input type="password" id="token" placeholder="Admin Token" />
+  <button onclick="doLogin()">LOGIN</button>
+  <div id="err"></div>
+</div>
+
+<div id="dashboard" class="hidden">
+  <h1>══ CHATROOM ADMIN ══</h1>
+  <div class="cards">
+    <div class="card"><div class="card-val" id="s-rooms">-</div><div class="card-label">ROOMS</div></div>
+    <div class="card"><div class="card-val" id="s-members">-</div><div class="card-label">MEMBERS</div></div>
+    <div class="card"><div class="card-val" id="s-installs">-</div><div class="card-label">INSTALLATIONS</div></div>
+  </div>
+  <table>
+    <thead><tr><th>#Room</th><th>Members</th><th>Topic</th><th>Installation</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+const WORKER = location.hostname === 'localhost'
+  ? 'http://localhost:8787'
+  : 'https://openilink-chatroom.cinwell.workers.dev';
+
+let token = '';
+
+async function doLogin() {
+  token = document.getElementById('token').value.trim();
+  const res = await fetch(`${WORKER}/api/rooms`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) { document.getElementById('err').textContent = '认证失败'; return; }
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  render(await res.json());
+  setInterval(refresh, 10000);
+}
+
+async function refresh() {
+  const res = await fetch(`${WORKER}/api/rooms`, { headers: { Authorization: `Bearer ${token}` } });
+  if (res.ok) render(await res.json());
+}
+
+function render({ stats, rooms }) {
+  document.getElementById('s-rooms').textContent = stats.total_rooms;
+  document.getElementById('s-members').textContent = stats.total_members;
+  document.getElementById('s-installs').textContent = stats.total_installations;
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = rooms.map(r => `
+    <tr>
+      <td>#${r.name}</td>
+      <td><span class="badge">${r.member_count} 人</span></td>
+      <td>${r.topic || '<span style="color:#444">—</span>'}</td>
+      <td style="color:#444;font-size:0.75rem">${r.installation_id.slice(0,8)}…</td>
+    </tr>
+  `).join('');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#1a1a2e"/>
+  <!-- Terminal window chrome -->
+  <rect x="64" y="120" width="384" height="272" rx="12" fill="#0d0d1a" stroke="#333" stroke-width="2"/>
+  <!-- Traffic lights -->
+  <circle cx="104" cy="152" r="10" fill="#ff5f57"/>
+  <circle cx="132" cy="152" r="10" fill="#febc2e"/>
+  <circle cx="160" cy="152" r="10" fill="#28c840"/>
+  <!-- Divider -->
+  <line x1="64" y1="172" x2="448" y2="172" stroke="#333" stroke-width="1.5"/>
+  <!-- IRC text lines -->
+  <text x="88" y="210" font-family="monospace" font-size="22" fill="#666">══ #general ══</text>
+  <text x="88" y="242" font-family="monospace" font-size="20" fill="#4caf7d">＊ alice 加入了房间</text>
+  <text x="88" y="272" font-family="monospace" font-size="20" fill="#7ec8e3">&lt;bob&gt; 大家好！</text>
+  <text x="88" y="302" font-family="monospace" font-size="20" fill="#7ec8e3">&lt;alice&gt; 你好 :)</text>
+  <text x="88" y="332" font-family="monospace" font-size="20" fill="#666">＊ carol 加入了房间</text>
+  <!-- Cursor blink -->
+  <rect x="88" y="356" width="12" height="20" rx="1" fill="#7ec8e3" opacity="0.8"/>
+</svg>
