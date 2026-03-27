@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { botSend } from "./botapi";
 import { getEventType, parseInstallPayload } from "./protocol";
 
 // ── inline the pure functions under test ──────────────────────
@@ -182,12 +183,13 @@ describe("hub protocol compatibility", () => {
     const install = parseInstallPayload({
       installation_id: "inst_123",
       app_token: "tok_123",
+      webhook_secret: "sec_new",
       signing_secret: "sec_123",
       bot_id: "bot_123",
       hub_url: "https://hub.openilink.com",
     });
 
-    expect(install?.webhookSecret).toBe("sec_123");
+    expect(install?.webhookSecret).toBe("sec_new");
   });
 
   it("reads event type from event envelope", () => {
@@ -197,5 +199,47 @@ describe("hub protocol compatibility", () => {
         event: { type: "message.text" },
       }),
     ).toBe("message.text");
+  });
+
+  it("rejects incomplete install payload", () => {
+    expect(
+      parseInstallPayload({
+        installation_id: "inst_123",
+        app_token: "tok_123",
+        webhook_secret: "sec_123",
+        bot_id: "bot_123",
+      }),
+    ).toBeNull();
+  });
+
+  it("returns empty event type when event is missing", () => {
+    expect(getEventType({ type: "event" })).toBe("");
+  });
+});
+
+describe("bot api client", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("sends text messages to the latest bot api endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await botSend("https://hub.openilink.com", "tok_123", "wxid_alice", "hello");
+
+    expect(fetchMock).toHaveBeenCalledWith("https://hub.openilink.com/bot/v1/message/send", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer tok_123",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: "wxid_alice",
+        type: "text",
+        content: "hello",
+      }),
+    });
   });
 });
