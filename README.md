@@ -11,14 +11,14 @@
 
 ## 命令
 
-| 命令 | 说明 |
-|------|------|
-| `/join <房间名>` | 加入或创建房间 |
-| `/leave` | 离开当前房间 |
-| `/who` | 查看当前房间成员 |
-| `/rooms` | 查看所有房间列表 |
-| `/nick <昵称>` | 设置昵称 |
-| `/topic <内容>` | 设置房间话题 |
+| 命令             | 说明             |
+| ---------------- | ---------------- |
+| `/join <房间名>` | 加入或创建房间   |
+| `/leave`         | 离开当前房间     |
+| `/who`           | 查看当前房间成员 |
+| `/rooms`         | 查看所有房间列表 |
+| `/nick <昵称>`   | 设置昵称         |
+| `/topic <内容>`  | 设置房间话题     |
 
 ## 部署
 
@@ -62,37 +62,42 @@ npx wrangler deploy
 在 Hub 管理后台 → Apps → Create App，填写：
 
 **基本信息**
+
 - Name: `微信聊天室`
 - Slug: `wechat-chatroom`
 
 **Tools**
+
 ```json
 [
-  {"name": "join",  "description": "加入或创建聊天室房间", "command": "join"},
-  {"name": "leave", "description": "离开当前房间", "command": "leave"},
-  {"name": "who",   "description": "查看当前房间成员", "command": "who"},
-  {"name": "rooms", "description": "查看所有房间列表", "command": "rooms"},
-  {"name": "nick",  "description": "设置昵称", "command": "nick"},
-  {"name": "topic", "description": "设置房间话题", "command": "topic"}
+  { "name": "join", "description": "加入或创建聊天室房间", "command": "join" },
+  { "name": "leave", "description": "离开当前房间", "command": "leave" },
+  { "name": "who", "description": "查看当前房间成员", "command": "who" },
+  { "name": "rooms", "description": "查看所有房间列表", "command": "rooms" },
+  { "name": "nick", "description": "设置昵称", "command": "nick" },
+  { "name": "topic", "description": "设置房间话题", "command": "topic" }
 ]
 ```
 
 **Events**
+
 ```json
 ["message.text"]
 ```
 
 **Scopes**
+
 ```json
-["messages.send"]
+["message:read", "message:write"]
 ```
 
-**Redirect URL**（关键：带上你的 Hub 地址）
+**Redirect URL**
+
 ```
-https://openilink-chatroom.workers.dev/install?hub=https://your-hub.example.com
+https://chatroom.clawgame.win/install
 ```
 
-> 每个 Hub 实例的 `redirect_url` 中 `hub=` 参数需填写对应的 Hub 地址。
+> Hub 最新版本会向该地址 POST `installation_id`、`app_token`、`webhook_secret`、`bot_id`、`hub_url`。
 
 ---
 

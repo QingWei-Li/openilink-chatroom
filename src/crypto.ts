@@ -1,6 +1,6 @@
-// Verify Hub event signature: HMAC-SHA256(signing_secret, "{timestamp}:{body}")
+// Verify Hub event signature: HMAC-SHA256(webhook_secret, "{timestamp}:{body}")
 export async function verifySignature(
-  signingSecret: string,
+  webhookSecret: string,
   timestamp: string,
   body: string,
   signature: string, // "sha256=<hex>"
@@ -10,7 +10,7 @@ export async function verifySignature(
 
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(signingSecret),
+    new TextEncoder().encode(webhookSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],

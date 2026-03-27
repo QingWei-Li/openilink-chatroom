@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { getEventType, parseInstallPayload } from "./protocol";
 
 // ── inline the pure functions under test ──────────────────────
 
@@ -155,5 +156,46 @@ describe("signature verification", () => {
     const body = "{}";
     const sig = await makeSignature("secret", ts, body);
     expect(await verifySignature("secret", ts, body, sig)).toBe(false);
+  });
+});
+
+describe("hub protocol compatibility", () => {
+  it("accepts latest install payload", () => {
+    expect(
+      parseInstallPayload({
+        installation_id: "inst_123",
+        app_token: "tok_123",
+        webhook_secret: "sec_123",
+        bot_id: "bot_123",
+        hub_url: "https://hub.openilink.com",
+      }),
+    ).toEqual({
+      installationId: "inst_123",
+      appToken: "tok_123",
+      webhookSecret: "sec_123",
+      botId: "bot_123",
+      hubUrl: "https://hub.openilink.com",
+    });
+  });
+
+  it("keeps backward compatibility with signing_secret", () => {
+    const install = parseInstallPayload({
+      installation_id: "inst_123",
+      app_token: "tok_123",
+      signing_secret: "sec_123",
+      bot_id: "bot_123",
+      hub_url: "https://hub.openilink.com",
+    });
+
+    expect(install?.webhookSecret).toBe("sec_123");
+  });
+
+  it("reads event type from event envelope", () => {
+    expect(
+      getEventType({
+        type: "event",
+        event: { type: "message.text" },
+      }),
+    ).toBe("message.text");
   });
 });

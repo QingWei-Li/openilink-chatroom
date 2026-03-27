@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { Env } from "./types";
 import { verifySignature } from "./crypto";
+import { getEventType, parseInstallPayload } from "./protocol";
 import {
   handleJoin,
   handleLeave,
@@ -33,13 +34,9 @@ app.get("/", (c) => c.json({ ok: true }));
 // ── installation callback ───────────────────────────────────────
 
 app.post("/install", async (c) => {
-  const hubUrl = c.req.query("hub");
-  if (!hubUrl) return c.json({ error: "missing hub query param" }, 400);
-
   const body = await c.req.json<Record<string, string>>();
-  const { installation_id, app_token, signing_secret, bot_id } = body;
-
-  if (!installation_id || !app_token || !signing_secret || !bot_id) {
+  const install = parseInstallPayload(body);
+  if (!install) {
     return c.json({ error: "missing required fields", received: Object.keys(body) }, 400);
   }
 
@@ -47,7 +44,13 @@ app.post("/install", async (c) => {
     `INSERT OR REPLACE INTO installations (installation_id, app_token, signing_secret, bot_id, hub_url)
      VALUES (?, ?, ?, ?, ?)`,
   )
-    .bind(installation_id, app_token, signing_secret, bot_id, hubUrl)
+    .bind(
+      install.installationId,
+      install.appToken,
+      install.webhookSecret,
+      install.botId,
+      install.hubUrl,
+    )
     .run();
 
   return c.json({ request_url: `${c.env.WORKER_URL}/webhook` });
@@ -93,7 +96,9 @@ app.post("/webhook", async (c) => {
 
   let reply: string | null = null;
 
-  if (envelope.type === "command") {
+  const eventType = getEventType(envelope);
+
+  if (eventType === "command") {
     const cmd: string = envelope.event?.data?.command ?? "";
     const args: string = envelope.event?.data?.text ?? "";
 
@@ -119,7 +124,7 @@ app.post("/webhook", async (c) => {
       default:
         reply = "未知命令。可用：/join /leave /who /rooms /nick /topic";
     }
-  } else if (envelope.type === "event" && envelope.event?.type === "message.text") {
+  } else if (eventType === "message.text") {
     const text: string = envelope.event?.data?.content?.text ?? envelope.event?.data?.content ?? "";
     reply = await handleMessage(c.env.DB, instCtx, sender, text);
   }

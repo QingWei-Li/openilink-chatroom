@@ -5,12 +5,12 @@ export async function botSend(
   to: string,
   content: string,
 ): Promise<void> {
-  await fetch(`${hubUrl}/bot/v1/messages/send`, {
+  await fetch(`${hubUrl}/bot/v1/message/send`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${appToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ to, content }),
+    body: JSON.stringify({ to, type: "text", content }),
   });
 }
