@@ -9,13 +9,14 @@ export async function broadcast(
   text: string,
   hubUrl: string,
   appToken: string,
+  traceId?: string,
 ): Promise<void> {
   const { results } = await db
     .prepare("SELECT user_id FROM members WHERE room_id = ? AND user_id != ?")
     .bind(roomId, excludeUserId)
     .all<{ user_id: string }>();
 
-  await Promise.all(results.map((r) => botSend(hubUrl, appToken, r.user_id, text)));
+  await Promise.all(results.map((r) => botSend(hubUrl, appToken, r.user_id, text, traceId)));
 }
 
 // Get the room a user is currently in (for this installation)

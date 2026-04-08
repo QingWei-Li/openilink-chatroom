@@ -24,6 +24,7 @@ export async function handleJoin(
   inst: Installation,
   sender: Sender,
   args: string,
+  traceId?: string,
 ): Promise<string> {
   const roomName = args.trim().toLowerCase().replace(/^#/, "");
   if (!roomName) return "用法：/join <房间名>";
@@ -42,6 +43,7 @@ export async function handleJoin(
       `＊ ${sender.name} 离开了 #${current.name}`,
       inst.hub_url,
       inst.app_token,
+      traceId,
     );
   }
 
@@ -72,6 +74,7 @@ export async function handleJoin(
     `＊ ${nick} 加入了 #${roomName}`,
     inst.hub_url,
     inst.app_token,
+    traceId,
   );
 
   // Build member list for reply
@@ -92,6 +95,7 @@ export async function handleLeave(
   db: D1Database,
   inst: Installation,
   sender: Sender,
+  traceId?: string,
 ): Promise<string> {
   const current = await getUserRoom(db, sender.id, inst.installation_id);
   if (!current) return "你还没有加入任何房间";
@@ -108,6 +112,7 @@ export async function handleLeave(
     `＊ ${nick} 离开了 #${current.name}`,
     inst.hub_url,
     inst.app_token,
+    traceId,
   );
 
   return `＊ 你离开了 #${current.name}`;
@@ -162,6 +167,7 @@ export async function handleNick(
   inst: Installation,
   sender: Sender,
   args: string,
+  traceId?: string,
 ): Promise<string> {
   const newNick = args.trim();
   if (!newNick) return "用法：/nick <昵称>";
@@ -181,6 +187,7 @@ export async function handleNick(
     `＊ ${oldNick} 改名为 ${newNick}`,
     inst.hub_url,
     inst.app_token,
+    traceId,
   );
 
   return `＊ 你的昵称已改为 ${newNick}`;
@@ -191,6 +198,7 @@ export async function handleTopic(
   inst: Installation,
   sender: Sender,
   args: string,
+  traceId?: string,
 ): Promise<string> {
   const topic = args.trim();
   if (!topic) return "用法：/topic <话题内容>";
@@ -207,6 +215,7 @@ export async function handleTopic(
     `＊ ${nick} 将话题设为：${topic}`,
     inst.hub_url,
     inst.app_token,
+    traceId,
   );
 
   return `＊ 话题已更新：${topic}`;
@@ -219,6 +228,7 @@ export async function handleMessage(
   inst: Installation,
   sender: Sender,
   text: string,
+  traceId?: string,
 ): Promise<string | null> {
   const current = await getUserRoom(db, sender.id, inst.installation_id);
   if (!current) return "发送 /join <房间名> 加入聊天室";
@@ -231,6 +241,7 @@ export async function handleMessage(
     `<${nick}> ${text}`,
     inst.hub_url,
     inst.app_token,
+    traceId,
   );
 
   return null; // no reply to sender needed

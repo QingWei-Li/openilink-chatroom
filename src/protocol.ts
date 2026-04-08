@@ -31,3 +31,18 @@ export function parseInstallPayload(
 export function getEventType(envelope: { type?: string; event?: { type?: string } }): string {
   return envelope.event?.type ?? "";
 }
+
+// Extract command args: prefer structured args.text (AI Agent), fallback to text
+export function getCommandArgs(envelope: {
+  event?: { data?: { args?: { text?: string }; text?: string; [k: string]: unknown } };
+}): string {
+  const data = envelope.event?.data;
+  if (!data) return "";
+  const argsText = data.args?.text;
+  if (typeof argsText === "string" && argsText) return argsText;
+  return typeof data.text === "string" ? data.text : "";
+}
+
+export function getTraceId(envelope: { trace_id?: unknown }): string {
+  return typeof envelope.trace_id === "string" ? envelope.trace_id : "";
+}

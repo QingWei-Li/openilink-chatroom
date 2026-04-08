@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { Env } from "./types";
 import { verifySignature } from "./crypto";
-import { getEventType, parseInstallPayload } from "./protocol";
+import { getEventType, getCommandArgs, getTraceId } from "./protocol";
+import { handleOAuthSetup, handleOAuthCallback } from "./oauth";
 import {
   handleJoin,
   handleLeave,
@@ -31,30 +32,10 @@ app.options("/api/*", (_c) => {
 
 app.get("/", (c) => c.json({ ok: true }));
 
-// ── installation callback ───────────────────────────────────────
+// ── OAuth PKCE installation ────────────────────────────────────
 
-app.post("/install", async (c) => {
-  const body = await c.req.json<Record<string, string>>();
-  const install = parseInstallPayload(body);
-  if (!install) {
-    return c.json({ error: "missing required fields", received: Object.keys(body) }, 400);
-  }
-
-  await c.env.DB.prepare(
-    `INSERT OR REPLACE INTO installations (installation_id, app_token, signing_secret, bot_id, hub_url)
-     VALUES (?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      install.installationId,
-      install.appToken,
-      install.webhookSecret,
-      install.botId,
-      install.hubUrl,
-    )
-    .run();
-
-  return c.json({ request_url: `${c.env.WORKER_URL}/webhook` });
-});
+app.get("/oauth/setup", handleOAuthSetup);
+app.get("/oauth/callback", handleOAuthCallback);
 
 // ── webhook ─────────────────────────────────────────────────────
 
@@ -87,6 +68,7 @@ app.post("/webhook", async (c) => {
     return c.json({ error: "invalid signature" }, 401);
   }
 
+  const traceId = getTraceId(envelope);
   const sender: { id: string; name: string } = envelope.event?.data?.sender ?? { id: "", name: "" };
   const instCtx = {
     installation_id: inst.installation_id,
@@ -100,14 +82,14 @@ app.post("/webhook", async (c) => {
 
   if (eventType === "command") {
     const cmd: string = envelope.event?.data?.command ?? "";
-    const args: string = envelope.event?.data?.text ?? "";
+    const args = getCommandArgs(envelope);
 
     switch (cmd) {
       case "join":
-        reply = await handleJoin(c.env.DB, instCtx, sender, args);
+        reply = await handleJoin(c.env.DB, instCtx, sender, args, traceId);
         break;
       case "leave":
-        reply = await handleLeave(c.env.DB, instCtx, sender);
+        reply = await handleLeave(c.env.DB, instCtx, sender, traceId);
         break;
       case "who":
         reply = await handleWho(c.env.DB, instCtx, sender);
@@ -116,20 +98,20 @@ app.post("/webhook", async (c) => {
         reply = await handleRooms(c.env.DB, instCtx);
         break;
       case "nick":
-        reply = await handleNick(c.env.DB, instCtx, sender, args);
+        reply = await handleNick(c.env.DB, instCtx, sender, args, traceId);
         break;
       case "topic":
-        reply = await handleTopic(c.env.DB, instCtx, sender, args);
+        reply = await handleTopic(c.env.DB, instCtx, sender, args, traceId);
         break;
       default:
         reply = "未知命令。可用：/join /leave /who /rooms /nick /topic";
     }
   } else if (eventType === "message.text") {
     const text: string = envelope.event?.data?.content?.text ?? envelope.event?.data?.content ?? "";
-    reply = await handleMessage(c.env.DB, instCtx, sender, text);
+    reply = await handleMessage(c.env.DB, instCtx, sender, text, traceId);
   }
 
-  return c.json(reply ? { reply } : { ok: true });
+  return c.json(reply ? { reply, reply_type: "text" } : { ok: true });
 });
 
 // ── admin API ───────────────────────────────────────────────────
