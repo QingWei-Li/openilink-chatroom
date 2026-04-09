@@ -4,13 +4,17 @@ export async function botSend(
   appToken: string,
   to: string,
   content: string,
+  traceId?: string,
 ): Promise<void> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${appToken}`,
+    "Content-Type": "application/json",
+  };
+  if (traceId) headers["X-Trace-Id"] = traceId;
+
   await fetch(`${hubUrl}/bot/v1/message/send`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${appToken}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ to, type: "text", content }),
   });
 }
